@@ -117,6 +117,8 @@ func main() {
 }
 
 // http handler functions
+
+//redirects to home
 func Visit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", 303)
 }
@@ -127,6 +129,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//set or reset value for pages
 	page, err := r.Cookie("next-page")
 	if err == http.ErrNoCookie {
 		http.SetCookie(w, &http.Cookie{
@@ -138,12 +141,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, page)
 	}
 
+	//get first eight posts from database
 	limit, skip := int64(8), int64(8*0)
 	findOptions := options.FindOptions{
 		Limit: &limit,
 		Skip:  &skip,
 		Sort:  bson.M{"published": -1},
 	}
+
 	cursor, err := blogPosts.Find(ctx, bson.M{}, &findOptions)
 	if err != nil {
 		http.Error(w, "Find: "+err.Error(), 500)
@@ -155,16 +160,18 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 		tpl.ExecuteTemplate(w, "index.html", blogPosts)
-	} else if r.Method == http.MethodPost {
+	} else if r.Method == http.MethodPost { // user trying to subbscibe
 		if err := regiterSubscriber(r); err != nil {
-			if err.Error() == "Unregistered" {
+
+			if err.Error() == "Unregistered" { // unregistered/unreachable email address
 				http.Error(w, "Unregistered email address", 400)
 				return
-			} else if err.Error() == "You are already a subscriber" {
+			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
 				http.Error(w, err.Error(), 400)
 				return
 			}
 
+			// any other error
 			log.Println("Error sub:", err)
 			http.Error(w, "Something went wrong, try again later", 500)
 			return
@@ -174,6 +181,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// calls next eight blogposts
 func Next(w http.ResponseWriter, r *http.Request) {
 	if !ValidMethod(r) {
 		http.Error(w, "Method not allowed", 405)
@@ -191,12 +199,14 @@ func Next(w http.ResponseWriter, r *http.Request) {
 	page.Value = strconv.Itoa(pageNumber)
 	http.SetCookie(w, page)
 
+	// gets next eight blogposts
 	limit, skip := int64(8), int64(8*pageNumber)
 	findOptions := options.FindOptions{
 		Limit: &limit,
 		Skip:  &skip,
 		Sort:  bson.M{"published": -1},
 	}
+
 	cursor, err := blogPosts.Find(ctx, bson.M{}, &findOptions)
 	if err != nil {
 		http.Error(w, "Find: "+err.Error(), 500)
@@ -206,6 +216,7 @@ func Next(w http.ResponseWriter, r *http.Request) {
 
 	blogPosts := getBlogPostsFromCursor(cursor)
 
+	// if there are no more blogPosts in database
 	if len(blogPosts) == 0 {
 		tpl.ExecuteTemplate(w, "page-end.html", "/previous")
 		return
@@ -215,7 +226,17 @@ func Next(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "index.html", blogPosts)
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
-			http.Error(w, err.Error(), 500)
+			if err.Error() == "Unregistered" { // unregistered/unreachable email address
+				http.Error(w, "Unregistered email address", 400)
+				return
+			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
+				http.Error(w, err.Error(), 400)
+				return
+			}
+
+			// any other error
+			log.Println("Error sub:", err)
+			http.Error(w, "Something went wrong, try again later", 500)
 			return
 		}
 
@@ -223,6 +244,7 @@ func Next(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// gets previous eight posts
 func Previous(w http.ResponseWriter, r *http.Request) {
 	if !ValidMethod(r) {
 		http.Error(w, "Method not allowed", 405)
@@ -240,6 +262,7 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 	page.Value = strconv.Itoa(pageNumber)
 	http.SetCookie(w, page)
 
+	// page number starts from zero
 	if pageNumber < 0 {
 		tpl.ExecuteTemplate(w, "page-end.html", "/next")
 		return
@@ -251,6 +274,7 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 		Skip:  &skip,
 		Sort:  bson.M{"published": -1},
 	}
+
 	cursor, err := blogPosts.Find(ctx, bson.M{}, &findOptions)
 	if err != nil {
 		http.Error(w, "Find: "+err.Error(), 500)
@@ -264,14 +288,15 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "index.html", blogPosts)
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
-			if err.Error() == "Unregistered" {
+			if err.Error() == "Unregistered" { // unregistered/unreachable email address
 				http.Error(w, "Unregistered email address", 400)
 				return
-			} else if err.Error() == "You are already a subscriber" {
+			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
 				http.Error(w, err.Error(), 400)
 				return
 			}
 
+			// any other error
 			log.Println("Error sub:", err)
 			http.Error(w, "Something went wrong, try again later", 500)
 			return
@@ -286,7 +311,7 @@ func Blog(w http.ResponseWriter, r *http.Request) {
 	id := path[6:]
 	//fmt.Println(id)
 
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet { // render blogPosts
 		post, err := getSinglePostFromID(id)
 		if err != nil {
 			http.Error(w, "Something went wrong: "+err.Error(), 500)
@@ -294,13 +319,15 @@ func Blog(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tpl.ExecuteTemplate(w, "blog-post.html", post)
-	} else if r.Method == http.MethodPost {
+	} else if r.Method == http.MethodPost { // user trying to comment
+		//get comment
 		comment, err := getNewComment(r, id)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
 			return
 		}
 
+		// store in database
 		result, err := blogComments.InsertOne(ctx, comment)
 		if err != nil {
 			http.Error(w, "Something went wrong", 500)
@@ -322,7 +349,17 @@ func About(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "about.html", nil)
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
-			http.Error(w, "Internal server error: "+err.Error()+" try again later", 500)
+			if err.Error() == "Unregistered" { // unregistered/unreachable email address
+				http.Error(w, "Unregistered email address", 400)
+				return
+			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
+				http.Error(w, err.Error(), 400)
+				return
+			}
+
+			// any other error
+			log.Println("Error sub:", err)
+			http.Error(w, "Something went wrong, try again later", 500)
 			return
 		}
 
@@ -359,6 +396,7 @@ func NewBlog(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// serve Favicon
 func ServeFavicon(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "templates/favicon.ico")
 }
@@ -386,7 +424,7 @@ func routes() {
 	http.Handle("/assets/css/", http.StripPrefix("/assets/css/", http.FileServer(http.Dir("assets/css"))))
 	//images
 	http.Handle("/assets/images/", http.StripPrefix("/assets/images/", http.FileServer(http.Dir("assets/images"))))
-	//http.Handle("/assets/images/blog/", http.StripPrefix("/assets/images/blog/", http.FileServer(http.Dir("assets/images/blog"))))
+	http.Handle("/assets/images/blog/", http.StripPrefix("/assets/images/blog/", http.FileServer(http.Dir("assets/images/blog"))))
 	//js
 	http.Handle("/assets/js/", http.StripPrefix("/assets/js/", http.FileServer(http.Dir("assets/js"))))
 	http.Handle("/assets/js/demo/", http.StripPrefix("/assets/js/demo/", http.FileServer(http.Dir("assets/js/demo"))))
@@ -412,7 +450,7 @@ func routes() {
 	http.Handle("/assets/scss/theme/", http.StripPrefix("/assets/scss/theme/", http.FileServer(http.Dir("assets/scss/theme"))))
 }
 
-//checks if mehod is get or post
+//checks if method is get or post
 func ValidMethod(r *http.Request) bool {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		return false
@@ -427,6 +465,7 @@ func valid(input, exp string) bool {
 
 //processe form and gets new post
 func getNewPost(r *http.Request) (post NewPost, err error) {
+	// database information
 	database_ID := primitive.NewObjectID()
 
 	ID := database_ID.String()[10:34]
@@ -435,6 +474,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 
 	comments := []Comment{}
 
+	// get and validate form input
 	title, exp := r.FormValue("title"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
 	if !valid(title, exp) {
 		return NewPost{}, errors.New("Invalid character in blog title")
@@ -485,6 +525,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("Invalid admin password: " + err.Error())
 	}
 
+	// process image file
 	file, img_header, err := r.FormFile("blogImage")
 	if err != nil {
 		return NewPost{}, err
@@ -498,13 +539,14 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 
 	read_Time := math.Round(float64(len(title)+len(content)+len(bp_heading)+len(bullet_point_content)+len(blog_quote)+len(quote_author)) / 100)
 
+	// get subscribers email address
 	subscribers, err := getAllSubscribers()
 
-	if err != nil {
+	if err != nil { // delete image file and return error message
 		files, _ := ioutil.ReadDir("./assets/images/blog")
 		for _, v := range files {
 			if strings.Contains(v.Name(), ID) {
-				os.Remove("./assets/images/blog/"+ID)
+				os.Remove("./assets/images/blog/" + ID)
 				break
 			}
 		}
@@ -512,10 +554,12 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, err
 	}
 
+	// send mail to subscibers
 	if err := sendMailOnNewBlogPost(subscribers, ID, title); err != nil {
 		return NewPost{}, err
 	}
 
+	// return new post data
 	return NewPost{database_ID, ID, title, pub_Time, read_Time, content, img_Name, bp_heading, bullet_points, bq_heading, blog_quote, quote_author, video_path, comments}, nil
 }
 
@@ -531,11 +575,13 @@ func Found(items []string, item string) bool {
 
 //processes image, store in images folder and retrieve its name
 func uploadImageAndReturnName(file multipart.File, ext, ID string) (name string, err error) {
+	//check for correct file type
 	allowedExt := []string{".jpeg", ".jpg", ".png"}
 	if !Found(allowedExt, ext) {
 		return "", errors.New("Unaccepted image, only .jpeg, .png, .jpg")
 	}
 
+	//store image in blog directory
 	bs, err := ioutil.ReadAll(file)
 	if err != nil {
 		return "", errors.New("Reaing image file error: " + err.Error())
@@ -545,8 +591,10 @@ func uploadImageAndReturnName(file multipart.File, ext, ID string) (name string,
 	if err != nil {
 		return "", errors.New("Tempfile: " + err.Error())
 	}
+	defer f.Close()
 	f.Write(bs)
 
+	// get image name from blog directory
 	files, err := ioutil.ReadDir("assets/images/blog")
 	if err != nil {
 		return "", errors.New("Reading images directory: " + err.Error())
@@ -562,6 +610,7 @@ func uploadImageAndReturnName(file multipart.File, ext, ID string) (name string,
 	return img_Name, nil
 }
 
+// checks if user is already subscribed
 func alreadySubcribed(email string) bool {
 	singleResult := emails.FindOne(ctx, bson.M{"mail": email})
 	if singleResult.Err() != nil {
@@ -570,24 +619,30 @@ func alreadySubcribed(email string) bool {
 	return true
 }
 
+// register subscriber
 func regiterSubscriber(r *http.Request) error {
+	//valide email
 	Email, exp := r.FormValue("semail1"), `^([a-zA-z0-9.!#$%&'*+/=?^_{|}~-]{3,})@([a-zA-Z0-9]{2,})\.([a-zA-Z]{2,})(.[a-zA-Z]+)?$`
 	if !valid(Email, exp) {
 		return errors.New("invalid email address")
 	}
 
+	// check if email is registered / reachable using "mailboxlayer api"
 	if err := checkIfEmailIsRegistered(Email); err != nil {
 		return err
 	}
 
+	//check if user is already subscribed
 	if alreadySubcribed(Email) {
 		return errors.New("You are already a subscriber")
 	}
 
+	// send welcome message
 	if err := sendWelcomeMail(Email); err != nil {
 		return err
 	}
 
+	// register new subscriber
 	newSubscriber := Subscriber{primitive.NewObjectID(), Email}
 
 	if _, err := emails.InsertOne(ctx, newSubscriber); err != nil {
@@ -598,6 +653,7 @@ func regiterSubscriber(r *http.Request) error {
 	return nil
 }
 
+// get post comment from post id
 func getPostComments(ID string) []Comment {
 	var comments []Comment
 
@@ -619,6 +675,7 @@ func getPostComments(ID string) []Comment {
 	return comments
 }
 
+// get blogpost from cursor
 func getBlogPostsFromCursor(cursor *mongo.Cursor) []BlogPost {
 	var blogPosts []BlogPost
 	for cursor.Next(ctx) {
@@ -638,6 +695,7 @@ func getBlogPostsFromCursor(cursor *mongo.Cursor) []BlogPost {
 	return blogPosts
 }
 
+// get a single post from post id
 func getSinglePostFromID(ID string) (BlogPost, error) {
 	var singlePost NewPost
 
@@ -653,9 +711,10 @@ func getSinglePostFromID(ID string) (BlogPost, error) {
 }
 
 func getNewComment(r *http.Request, id string) (Comment, error) {
-	commentor, exp := r.FormValue("commentor"), `^[a-zA-Z\s_]{2,20}$`
+	// validate
+	commentor, exp := r.FormValue("commentor"), `^[a-zA-Z\s_]{2,35}$`
 	if !valid(commentor, exp) {
-		return Comment{}, errors.New(`Invalid input in name field or name not given, only "_" special character is allowed in name field a minimum of two characters and maximum of 20 characters`)
+		return Comment{}, errors.New(`Invalid input in name field or name not given, only "_" special character is allowed in name field a minimum of two characters and maximum of 35 characters`)
 	}
 
 	comment, exp := r.FormValue("comment"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
