@@ -1,4 +1,4 @@
-module projects/needrima-s-blog
+module github.com/needrima/myblog
 
 go 1.16
 
