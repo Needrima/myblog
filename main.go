@@ -480,6 +480,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	if !valid(admin_password, exp) {
 		return NewPost{}, errors.New("Invalid character in admin password")
 	}
+	
 	if err := bcrypt.CompareHashAndPassword([]byte(adminPassword), []byte(admin_password)); err != nil {
 		return NewPost{}, errors.New("Invalid admin password: " + err.Error())
 	}
