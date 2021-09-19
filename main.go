@@ -480,7 +480,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	if !valid(admin_password, exp) {
 		return NewPost{}, errors.New("Invalid character in admin password")
 	}
-	
+
 	if err := bcrypt.CompareHashAndPassword([]byte(adminPassword), []byte(admin_password)); err != nil {
 		return NewPost{}, errors.New("Invalid admin password: " + err.Error())
 	}
@@ -501,6 +501,14 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	subscribers, err := getAllSubscribers()
 
 	if err != nil {
+		files, _ := ioutil.ReadDir("./assets/images/blog")
+		for _, v := range files {
+			if strings.Contains(v.Name(), ID) {
+				os.Remove("./assets/images/blog/"+ID)
+				break
+			}
+		}
+
 		return NewPost{}, err
 	}
 
