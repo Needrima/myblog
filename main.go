@@ -696,9 +696,7 @@ func checkIfEmailIsRegistered(email string) error {
 		log.Fatal("Unmarshal:", err)
 	}
 
-	if !m.SmtpCheck {
-		return errors.New("Unregistered")
-	} else if m.Score < 0.5 {
+	if !m.SmtpCheck || m.Score < 0.5 {
 		return errors.New("Unregistered")
 	}
 
