@@ -715,7 +715,7 @@ func sendWelcomeMail(email string) error {
 
 	password := os.Getenv("emailPassword")
 
-	mail.SetBody("text/html", `Welcome to Needrima's blog. I'm Needrima and I'm pleased to have you on board. <a style="color:red;" href="http://student-devs-blog.herokuapp.com">Visit</a> now to start reading my posts.`)
+	mail.SetBody("text/html", `Welcome to Needrima's blog. I'm Needrima and I'm pleased to have you on board. <a style="color:red;" href="http://needrimasblog.herokuapp.com">Visit</a> now to start reading my posts.`)
 
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, "oyebodeamirdeen@gmail.com", password)
 
