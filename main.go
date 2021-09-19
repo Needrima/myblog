@@ -710,7 +710,7 @@ func sendWelcomeMail(email string) error {
 
 	mail.SetHeaders(map[string][]string{
 		"To":      {email},
-		"Subject": {"Welcome to Student Devs Blog"},
+		"Subject": {"Welcome to Needrima's Blog"},
 	})
 
 	password := os.Getenv("emailPassword")
@@ -760,12 +760,12 @@ func sendMailOnNewBlogPost(emails []string, blogId, title string) error {
 
 	mail.SetHeaders(map[string][]string{
 		"To":      emails,
-		"Subject": {title},
+		"Subject": {title + " at Needrima's blog"},
 	})
 
 	password := os.Getenv("emailPassword")
 
-	body := fmt.Sprintf(`I just posted a new blog titled %s check it out <a style="color:red;" href="http://needrimasblog.herokuapp.com/blog/%s">Here</a>.`, title, blogId)
+	body := fmt.Sprintf(`I just posted a new blog titled <b>%s</b> check it out <a style="color:red;" href="http://needrimasblog.herokuapp.com/blog/%s">Here</a>.`, title, blogId)
 
 	mail.SetBody("text/html", body)
 
