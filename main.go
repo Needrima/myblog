@@ -162,7 +162,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		if err := regiterSubscriber(r); err != nil {
 
 			if err.Error() == "Unregistered" { // unregistered/unreachable email address
-				http.Error(w, "Unregistered email address", 400)
+				http.Error(w, "Email not deliverable. Check that email is correct or try again later", 400)
 				return
 			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
 				http.Error(w, err.Error(), 400)
@@ -322,6 +322,7 @@ func Blog(w http.ResponseWriter, r *http.Request) {
 		comment, err := getNewComment(r, id)
 		if err != nil {
 			if err.Error() == "You already made this reply" {
+				log.Println("You already made this reply")
 				http.Error(w, err.Error(), 400)
 				return
 			}
