@@ -738,7 +738,7 @@ func getNewComment(r *http.Request, id string) (Comment, error) {
 			return Comment{}, errors.New("Something went wrong")
 		}
 
-		if strings.ToLower(c.Commentor) == strings.ToLower(commentor) && strings.ToLower(c.Comment) == strings.ToLower(comment) {
+		if strings.ToLower(strings.TrimSpace(c.Commentor)) == strings.ToLower(strings.TrimSpace(commentor)) && strings.ToLower(strings.TrimSpace(c.Comment)) == strings.ToLower(strings.TrimSpace(comment)) {
 			return Comment{}, errors.New("You already made this reply")
 		}
 	}
