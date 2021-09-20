@@ -39,8 +39,6 @@ var (
 	blogComments *mongo.Collection
 	emails       *mongo.Collection
 
-	adminPassword = "$2a$04$0hSpFQgRp4Nz2f0AuBIXTuXI0fxG/UGh5.JWsDBOHtZCiGM7o/bOS"
-
 	fm = template.FuncMap{
 		"rbc": ReduceBlogContent,
 	}
@@ -323,7 +321,12 @@ func Blog(w http.ResponseWriter, r *http.Request) {
 		//get comment
 		comment, err := getNewComment(r, id)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			if err.Error() == "You already made this reply" {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+
+			http.Error(w, err.Error(), 500)
 			return
 		}
 
@@ -521,7 +524,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("Invalid character in admin password")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(adminPassword), []byte(admin_password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(os.Getenv("adminPassword")), []byte(admin_password)); err != nil {
 		return NewPost{}, errors.New("Invalid admin password: " + err.Error())
 	}
 
@@ -711,7 +714,7 @@ func getSinglePostFromID(ID string) (BlogPost, error) {
 }
 
 func getNewComment(r *http.Request, id string) (Comment, error) {
-	// validate
+	// validate form
 	commentor, exp := r.FormValue("commentor"), `^[a-zA-Z\s_]{2,35}$`
 	if !valid(commentor, exp) {
 		return Comment{}, errors.New(`Invalid input in name field or name not given, only "_" special character is allowed in name field a minimum of two characters and maximum of 35 characters`)
@@ -722,11 +725,29 @@ func getNewComment(r *http.Request, id string) (Comment, error) {
 		return Comment{}, errors.New("Invalid input in comment field")
 	}
 
+	cursor, err := blogComments.Find(ctx, bson.M{})
+	if err != nil {
+		return Comment{}, errors.New("Something went wrong")
+	}
+
+	for cursor.Next(ctx) {
+		var c Comment
+
+		if err := cursor.Decode(&c); err != nil {
+			return Comment{}, errors.New("Something went wrong")
+		}
+
+		if c.Commentor == commentor && c.Comment == comment {
+			return Comment{}, errors.New("You already made this reply")
+		}
+	}
+
 	database_ID := primitive.NewObjectID()
 	belongsto := id
 	return Comment{database_ID, belongsto, commentor, comment}, nil
 }
 
+// reduce blog content for home page
 func ReduceBlogContent(content string) string {
 	if len(content) > 219 {
 		return content[:219]
@@ -764,6 +785,7 @@ func checkIfEmailIsRegistered(email string) error {
 		log.Fatal("Unmarshal:", err)
 	}
 
+	// smtp_check is usually false for unregistered/ unreachable emails and score is usually less than 0.5
 	if !m.SmtpCheck || m.Score < 0.5 {
 		return errors.New("Unregistered")
 	}
@@ -771,6 +793,7 @@ func checkIfEmailIsRegistered(email string) error {
 	return nil
 }
 
+// send mail with gmail IMAP
 func sendWelcomeMail(email string) error {
 	mail := gomail.NewMessage()
 
@@ -797,6 +820,7 @@ func sendWelcomeMail(email string) error {
 	return nil
 }
 
+// gets all subscribers from database and return their mails
 func getAllSubscribers() ([]string, error) {
 	cursor, err := emails.Find(ctx, bson.M{})
 	if err != nil {
@@ -821,6 +845,7 @@ func getAllSubscribers() ([]string, error) {
 	return emails, nil
 }
 
+// send mail on new blogpost to all subscribers
 func sendMailOnNewBlogPost(emails []string, blogId, title string) error {
 	mail := gomail.NewMessage()
 
