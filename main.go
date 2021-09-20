@@ -354,7 +354,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
 			if err.Error() == "Unregistered" { // unregistered/unreachable email address
-				http.Error(w, "Unregistered email address", 400)
+				http.Error(w, "Email not deliverable. Check that email is correct or try again later", 400)
 				return
 			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
 				http.Error(w, err.Error(), 400)
@@ -759,9 +759,14 @@ func ReduceBlogContent(content string) string {
 
 // using mailBoxlayer API to validate email registration
 func checkIfEmailIsRegistered(email string) error {
-	type validEmail struct {
-		SmtpCheck bool    `json:"smtp_check"`
-		Score     float64 `json:"score"`
+	//{"debounce":{"email":"oyebodeamirdeen@gmail.com","code":"5","role":"false","free_email":"true","result":"Safe to Send","reason":"Deliverable","send_transactional":"1","did_you_mean":""},"success":"1","balance":"88"}
+	type Debounce struct {
+		Result string `json:result"`
+		Reason string `json:"reason"`
+	}
+
+	type DeliverableEmail struct {
+		Debounce `json:debounce"`
 	}
 
 	access_key := os.Getenv("emailValidator_access_key")
@@ -779,7 +784,7 @@ func checkIfEmailIsRegistered(email string) error {
 
 	fmt.Println(string(bs), "\n")
 
-	m := validEmail{}
+	m := DeliverableEmail{}
 
 	err = json.Unmarshal(bs, &m)
 	if err != nil {
@@ -787,7 +792,7 @@ func checkIfEmailIsRegistered(email string) error {
 	}
 
 	// smtp_check is usually false for unregistered/ unreachable emails and score is usually less than 0.5
-	if !m.SmtpCheck || m.Score < 0.5 {
+	if m.Result != "Safe to Send" || m.Reason != "Deliverable" {
 		return errors.New("Unregistered")
 	}
 
