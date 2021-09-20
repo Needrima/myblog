@@ -757,21 +757,21 @@ func ReduceBlogContent(content string) string {
 	return content
 }
 
-// using mailBoxlayer API to validate email registration
+// using debounce API to validate email registration
 func checkIfEmailIsRegistered(email string) error {
 	//{"debounce":{"email":"oyebodeamirdeen@gmail.com","code":"5","role":"false","free_email":"true","result":"Safe to Send","reason":"Deliverable","send_transactional":"1","did_you_mean":""},"success":"1","balance":"88"}
 	type Debounce struct {
-		Result string `json:result"`
+		Result string `json:"result"`
 		Reason string `json:"reason"`
 	}
 
 	type DeliverableEmail struct {
-		Debounce `json:debounce"`
+		Debounce `json:"debounce"`
 	}
 
 	access_key := os.Getenv("emailValidator_access_key")
-	fmt.Println("Email:", email)
-	resp, err := http.Get(fmt.Sprintf("https://apilayer.net/api/check?access_key=%s&email=%s&smtp=1&format=1", access_key, email))
+	fmt.Println(email)
+	resp, err := http.Get(fmt.Sprintf("https://api.debounce.io/v1/?api=%s&email=%s", access_key, email))
 	if err != nil {
 		log.Fatal("Resp:", err)
 	}
@@ -782,7 +782,7 @@ func checkIfEmailIsRegistered(email string) error {
 		log.Fatal("ReadAll:", err)
 	}
 
-	fmt.Println(string(bs), "\n")
+	fmt.Println(string(bs))
 
 	m := DeliverableEmail{}
 
@@ -790,6 +790,8 @@ func checkIfEmailIsRegistered(email string) error {
 	if err != nil {
 		log.Fatal("Unmarshal:", err)
 	}
+
+	fmt.Println(m.Result, m.Reason)
 
 	// smtp_check is usually false for unregistered/ unreachable emails and score is usually less than 0.5
 	if m.Result != "Safe to Send" || m.Reason != "Deliverable" {
