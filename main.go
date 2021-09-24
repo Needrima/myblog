@@ -479,12 +479,12 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	comments := []Comment{}
 
 	// get and validate form input
-	title, exp := r.FormValue("title"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	title, exp := r.FormValue("title"), `.*`
 	if !valid(title, exp) {
 		return NewPost{}, errors.New("Invalid character in blog title")
 	}
 
-	content, exp := r.FormValue("content"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	content, exp := r.FormValue("content"), `.*`
 	if !valid(content, exp) {
 		return NewPost{}, errors.New("Invalid character in content")
 	}
@@ -494,7 +494,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("Invalid character in bullet point heading")
 	}
 
-	bullet_point_content, exp := r.FormValue("bullet-points-content"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	bullet_point_content, exp := r.FormValue("bullet-points-content"), `.*`
 	if !valid(bullet_point_content, exp) {
 		return NewPost{}, errors.New("Invalid character in bullet points content")
 	}
@@ -505,7 +505,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("Invalid character in blog quote heading")
 	}
 
-	blog_quote, exp := r.FormValue("blog-quote"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	blog_quote, exp := r.FormValue("blog-quote"), `.*`
 	if !valid(blog_quote, exp) {
 		return NewPost{}, errors.New("Invalid character in blog quote content")
 	}
@@ -520,7 +520,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("Invalid character in youtube video path")
 	}
 
-	admin_password, exp := r.FormValue("adminPassword"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	admin_password, exp := r.FormValue("adminPassword"), `.*`
 	if !valid(admin_password, exp) {
 		return NewPost{}, errors.New("Invalid character in admin password")
 	}
