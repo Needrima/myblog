@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"> 
 <head>
-    <title>Needrima's Blog</title>
+    <title>{{.Title}}</title>
     
     <!-- Meta -->
     <meta charset="utf-8">
@@ -186,7 +186,7 @@
 
 		$("#comment-toggler").click(function(){
 			if (toggle_count%2 !== 0) {
-				$("#comment-section").slideDown(2000, function(){
+				$("#comment-section").slideDown(1000, function(){
 					$("#comment-toggler").text('Hide comments')
 					toggle_count++
 				});
