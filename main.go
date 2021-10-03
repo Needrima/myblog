@@ -626,7 +626,7 @@ func alreadySubcribed(email string) bool {
 // register subscriber
 func regiterSubscriber(r *http.Request) error {
 	//valide email
-	Email, exp := r.FormValue("semail1"), `^([a-zA-z0-9.!#$%&'*+/=?^_{|}~-]{3,})@([a-zA-Z0-9]{2,})\.([a-zA-Z]{2,})(.[a-zA-Z]+)?$`
+	Email, exp := template.HTMLEscaper(r.FormValue("semail1")), `^([a-zA-z0-9.!#$%&'*+/=?^_{|}~-]{3,})@([a-zA-Z0-9]{2,})\.([a-zA-Z]{2,})(.[a-zA-Z]+)?$`
 	if !valid(Email, exp) {
 		return errors.New("invalid email address")
 	}
@@ -716,12 +716,12 @@ func getSinglePostFromID(ID string) (BlogPost, error) {
 
 func getNewComment(r *http.Request, id string) (Comment, error) {
 	// validate form
-	commentor, exp := r.FormValue("commentor"), `^[a-zA-Z\s_]{2,35}$`
+	commentor, exp := template.HTMLEscaper(r.FormValue("commentor")), `^[a-zA-Z\s_]{2,35}$`
 	if !valid(commentor, exp) {
 		return Comment{}, errors.New(`Invalid input in name field or name not given, only "_" special character is allowed in name field a minimum of two characters and maximum of 35 characters`)
 	}
 
-	comment, exp := r.FormValue("comment"), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
+	comment, exp := template.HTMLEscaper(r.FormValue("comment")), `^[\sa-zA-Z0-9\.,\?/\\~!@#\\$%\[}\]{\^\&\*()-_\+=\|:;'"<>]+$`
 	if !valid(comment, exp) {
 		return Comment{}, errors.New("Invalid input in comment field")
 	}
