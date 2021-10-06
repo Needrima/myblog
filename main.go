@@ -89,8 +89,8 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	// uri := os.Getenv("atlasURI")
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	uri := os.Getenv("atlasURI")
+	clientOptions := options.Client().ApplyURI(uri)
 
 	ctx = context.Background()
 
