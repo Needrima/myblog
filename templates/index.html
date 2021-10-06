@@ -78,7 +78,7 @@
 	    </section>
 	    <section class="blog-list px-3 py-5 p-md-5">
 		    <div class="container">
-				{{range .}}
+				{{range .BlogPosts}}
 			    <div class="item mb-5">
 				    <div class="media">
 						<img class="mr-3 img-fluid post-thumb d-none d-md-flex" src="../assets/images/blog/{{.ImageName}}" alt="image" width="300" style="height: 110px;">
@@ -93,8 +93,8 @@
 				{{end}}
 			    
 			    <nav class="blog-nav nav nav-justified my-5">
-					<a class="nav-link-prev nav-item nav-link rounded-left" href="/previous">Previous<i class="arrow-prev fas fa-long-arrow-alt-left"></i></a>
-					<a class="nav-link-next nav-item nav-link rounded-right" href="/next">Next<i class="arrow-next fas fa-long-arrow-alt-right"></i></a>
+					<a class="nav-link-prev nav-item nav-link rounded-left" href="/previous/{{dec .PageNumber}}">Previous<i class="arrow-prev fas fa-long-arrow-alt-left"></i></a>
+					<a class="nav-link-next nav-item nav-link rounded-right" href="/next/{{inc .PageNumber}}">Next<i class="arrow-next fas fa-long-arrow-alt-right"></i></a>
 				</nav>
 				
 		    </div>

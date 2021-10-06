@@ -41,6 +41,8 @@ var (
 
 	fm = template.FuncMap{
 		"rbc": ReduceBlogContent,
+		"inc": Inc,
+		"dec": Dec,
 	}
 )
 
@@ -75,6 +77,11 @@ type BlogPost struct {
 	PublishedDate string
 }
 
+type BlogPostAndPageNumber struct {
+	BlogPosts  []BlogPost
+	PageNumber int
+}
+
 type Subscriber struct {
 	DatabaseID primitive.ObjectID `bson:"_id"`
 	Mail       string             `bson:"mail"`
@@ -82,8 +89,8 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	uri := os.Getenv("atlasURI")
-	clientOptions := options.Client().ApplyURI(uri)
+	// uri := os.Getenv("atlasURI")
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
 	ctx = context.Background()
 
@@ -127,20 +134,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//set or reset value for pages
-	page, err := r.Cookie("next-page")
-	if err == http.ErrNoCookie {
-		http.SetCookie(w, &http.Cookie{
-			Name:  "next-page",
-			Value: "0",
-		})
-	} else {
-		page.Value = "0"
-		http.SetCookie(w, page)
-	}
-
 	//get first eight posts from database
-	limit, skip := int64(8), int64(8*0)
+	limit, skip := int64(8), int64(0)
 	findOptions := options.FindOptions{
 		Limit: &limit,
 		Skip:  &skip,
@@ -156,8 +151,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	blogPosts := getBlogPostsFromCursor(cursor)
 
+	data := BlogPostAndPageNumber{BlogPosts: blogPosts}
+
 	if r.Method == http.MethodGet {
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	} else if r.Method == http.MethodPost { // user trying to subbscibe
 		if err := regiterSubscriber(r); err != nil {
 
@@ -175,7 +172,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	}
 }
 
@@ -186,16 +183,8 @@ func Next(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page, err := r.Cookie("next-page")
-	if err != nil {
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
-		return
-	}
-
-	pageNumber, _ := strconv.Atoi(page.Value)
+	pageNumber, _ := strconv.Atoi(r.URL.Path[len("/next/"):])
 	pageNumber++
-	page.Value = strconv.Itoa(pageNumber)
-	http.SetCookie(w, page)
 
 	// gets next eight blogposts
 	limit, skip := int64(8), int64(8*pageNumber)
@@ -216,16 +205,18 @@ func Next(w http.ResponseWriter, r *http.Request) {
 
 	// if there are no more blogPosts in database
 	if len(blogPosts) == 0 {
-		tpl.ExecuteTemplate(w, "page-end.html", "/previous")
+		tpl.ExecuteTemplate(w, "page-end.html", nil)
 		return
 	}
 
+	data := BlogPostAndPageNumber{blogPosts, pageNumber}
+
 	if r.Method == http.MethodGet {
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
 			if err.Error() == "Unregistered" { // unregistered/unreachable email address
-				http.Error(w, "Unregistered email address", 400)
+				http.Error(w, "Unregistered email address or email is undeliverable", 400)
 				return
 			} else if err.Error() == "You are already a subscriber" { // user already a subsciber
 				http.Error(w, err.Error(), 400)
@@ -238,7 +229,7 @@ func Next(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	}
 }
 
@@ -249,20 +240,11 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page, err := r.Cookie("next-page")
-	if err != nil {
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
-		return
-	}
-
-	pageNumber, _ := strconv.Atoi(page.Value)
+	pageNumber, _ := strconv.Atoi(r.URL.Path[len("/previous/"):])
 	pageNumber--
-	page.Value = strconv.Itoa(pageNumber)
-	http.SetCookie(w, page)
 
-	// page number starts from zero
-	if pageNumber < 0 {
-		tpl.ExecuteTemplate(w, "page-end.html", "/next")
+	if pageNumber < 1 {
+		http.Redirect(w, r, "/home", 303)
 		return
 	}
 
@@ -282,8 +264,10 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 
 	blogPosts := getBlogPostsFromCursor(cursor)
 
+	data := BlogPostAndPageNumber{blogPosts, pageNumber}
+
 	if r.Method == http.MethodGet {
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
 			if err.Error() == "Unregistered" { // unregistered/unreachable email address
@@ -300,7 +284,7 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tpl.ExecuteTemplate(w, "index.html", blogPosts)
+		tpl.ExecuteTemplate(w, "index.html", data)
 	}
 }
 
@@ -416,8 +400,8 @@ func routes() {
 	//handlers
 	http.HandleFunc("/", Visit)
 	http.HandleFunc("/home", Home)
-	http.HandleFunc("/next", Next)
-	http.HandleFunc("/previous", Previous)
+	http.HandleFunc("/next/", Next)
+	http.HandleFunc("/previous/", Previous)
 	http.HandleFunc("/blog/", Blog)
 	http.HandleFunc("/about", About)
 	http.HandleFunc("/admin/new", NewBlog)
@@ -757,6 +741,18 @@ func ReduceBlogContent(content string) string {
 	return content
 }
 
+// increment page number for routing
+func Inc(x int) int {
+	x++
+	return x
+}
+
+// decrement page number for routing
+func Dec(x int) int {
+	x--
+	return x
+}
+
 // using debounce API to validate email registration
 func checkIfEmailIsRegistered(email string) error {
 	//{"debounce":{"email":"oyebodeamirdeen@gmail.com","code":"5","role":"false","free_email":"true","result":"Safe to Send","reason":"Deliverable","send_transactional":"1","did_you_mean":""},"success":"1","balance":"88"}
@@ -828,7 +824,7 @@ func sendWelcomeMail(email string) error {
 	return nil
 }
 
-// gets all subscribers from database and return their mails
+// gets subscribers emails from database and return their mails
 func getAllSubscribers() ([]string, error) {
 	cursor, err := emails.Find(ctx, bson.M{})
 	if err != nil {
