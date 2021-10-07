@@ -184,7 +184,7 @@ func Next(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageNumber, _ := strconv.Atoi(r.URL.Path[len("/next/"):])
-	pageNumber++
+	//pageNumber++
 
 	// gets next eight blogposts
 	limit, skip := int64(8), int64(8*pageNumber)
@@ -241,7 +241,7 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageNumber, _ := strconv.Atoi(r.URL.Path[len("/previous/"):])
-	pageNumber--
+	//pageNumber--
 
 	if pageNumber < 1 {
 		http.Redirect(w, r, "/home", 303)
