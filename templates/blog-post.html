@@ -200,11 +200,21 @@
 					toggle_count++
 				});
 			}else {
-				$("#comment-section").slideUp(2000, function(){
+				$("#comment-section").slideUp(1000, function(){
 					$("#comment-toggler").text('Show comments')
 					toggle_count++
 				});
 			}
+
+			// let text = $("#comment-toggler").text();
+
+			// $("#comment-section").slideToggle(1000, function(){
+			// 	if (text = 'Show comments') {
+			// 		$("#comment-toggler").text('Hide comments');
+			// 	}else if (text = 'Hide comments') {
+			// 		$("#comment-toggler").text('Show comments');
+			// 	}
+			// });			
 		})
 	</script>     
 </body>

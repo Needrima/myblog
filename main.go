@@ -100,9 +100,9 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	uri := os.Getenv("atlasURI")
-	//shellURI := "mongodb://localhost:27017"
-	clientOptions := options.Client().ApplyURI(uri)
+	//uri := os.Getenv("atlasURI")
+	shellURI := "mongodb://localhost:27017"
+	clientOptions := options.Client().ApplyURI(shellURI)
 
 	ctx = context.Background()
 
@@ -466,35 +466,7 @@ func routes() {
 	http.HandleFunc("/admin/new", NewBlog)
 	http.HandleFunc("/favicon.ico/", ServeFavicon)
 
-	//folders
-	//css
-	http.Handle("/assets/css/", http.StripPrefix("/assets/css/", http.FileServer(http.Dir("assets/css"))))
-	//images
-	http.Handle("/assets/images/", http.StripPrefix("/assets/images/", http.FileServer(http.Dir("assets/images"))))
-	http.Handle("/assets/images/blog/", http.StripPrefix("/assets/images/blog/", http.FileServer(http.Dir("assets/images/blog"))))
-	//js
-	http.Handle("/assets/js/", http.StripPrefix("/assets/js/", http.FileServer(http.Dir("assets/js"))))
-	http.Handle("/assets/js/demo/", http.StripPrefix("/assets/js/demo/", http.FileServer(http.Dir("assets/js/demo"))))
-	//plugins
-	http.Handle("/assets/plugins/", http.StripPrefix("/assets/plugins/", http.FileServer(http.Dir("assets/plugins"))))
-	http.Handle("/assets/plugins/bootstrap/js/", http.StripPrefix("/assets/plugins/bootstrap/js/", http.FileServer(http.Dir("assets/plugins/bootstrap/js"))))
-	//scss
-	http.Handle("/assets/scss/", http.StripPrefix("/assets/scss/", http.FileServer(http.Dir("assets/scss"))))
-	//scss bootstrap js subfolders
-	http.Handle("/assets/scss/bootstrap/js/dist/", http.StripPrefix("/assets/scss/bootstrap/js/dist/", http.FileServer(http.Dir("assets/scss/bootstrap/js/dist"))))
-	http.Handle("/assets/scss/bootstrap/js/src/", http.StripPrefix("/assets/scss/bootstrap/js/src/", http.FileServer(http.Dir("assets/scss/bootstrap/js/src"))))
-	http.Handle("/assets/scss/bootstrap/js/tests/", http.StripPrefix("/assets/scss/bootstrap/js/tests/", http.FileServer(http.Dir("assets/scss/bootstrap/js/tests"))))
-	http.Handle("/assets/scss/bootstrap/js/tests/integration/", http.StripPrefix("/assets/scss/bootstrap/js/tests/integration/", http.FileServer(http.Dir("assets/scss/bootstrap/js/tests/integration"))))
-	http.Handle("/assets/scss/bootstrap/js/tests/unit/", http.StripPrefix("/assets/scss/bootstrap/js/tests/unit/", http.FileServer(http.Dir("assets/scss/bootstrap/js/tests/unit"))))
-	http.Handle("/assets/scss/bootstrap/js/tests/visual/", http.StripPrefix("/assets/scss/bootstrap/js/tests/visual/", http.FileServer(http.Dir("assets/scss/bootstrap/js/tests/visual"))))
-	//scss bootstrap scss
-	http.Handle("/assets/scss/bootstrap/scss/", http.StripPrefix("/assets/scss/bootstrap/scss/", http.FileServer(http.Dir("assets/scss/bootstrap/scss"))))
-	//scss bootstrap scss subfolderss
-	http.Handle("/assets/scss/bootstrap/scss/mixins/", http.StripPrefix("/assets/scss/bootstrap/scss/mixins/", http.FileServer(http.Dir("assets/scss/bootstrap/scss/mixins"))))
-	http.Handle("/assets/scss/bootstrap/scss/utilities/", http.StripPrefix("/assets/scss/bootstrap/scss/utilities/", http.FileServer(http.Dir("assets/scss/bootstrap/scss/utilities"))))
-	http.Handle("/assets/scss/bootstrap/scss/vendor/", http.StripPrefix("/assets/scss/bootstrap/scss/vendor/", http.FileServer(http.Dir("assets/scss/bootstrap/scss/vendor"))))
-	//scss theme
-	http.Handle("/assets/scss/theme/", http.StripPrefix("/assets/scss/theme/", http.FileServer(http.Dir("assets/scss/theme"))))
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 }
 
 //checks if method is get or post
