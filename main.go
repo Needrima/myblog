@@ -100,9 +100,9 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	uri := os.Getenv("atlasURI")
-	//shellURI := "mongodb://localhost:27017"
-	clientOptions := options.Client().ApplyURI(uri)
+	//uri := os.Getenv("atlasURI")
+	shellURI := "mongodb://localhost:27017"
+	clientOptions := options.Client().ApplyURI(shellURI)
 
 	ctx = context.Background()
 
@@ -702,10 +702,8 @@ func getPostComments(ID string) []Comment {
 }
 
 func getCommentReplies(commentID string) []Reply {
-	//var newComment Comment
-
-	fmt.Println("comment id", commentID)
-	fmt.Println("------------------------------------------------------------------")
+	// fmt.Println("comment id", commentID)
+	// fmt.Println("------------------------------------------------------------------")
 
 	var replies []Reply
 	cur, err := blogReplies.Find(ctx, bson.M{"belongsto": commentID})
@@ -750,13 +748,13 @@ func getSinglePostFromID(ID string) (BlogPost, error) {
 		return BlogPost{}, err
 	}
 
-	fmt.Println("Singlepost before comment", singlePost)
-	fmt.Println("------------------------------------------------------------------")
+	// fmt.Println("Singlepost before comment", singlePost)
+	// fmt.Println("------------------------------------------------------------------")
 
 	singlePost.Comments = getPostComments(ID)
 
-	fmt.Println("Singlepost after comment", singlePost)
-	fmt.Println("------------------------------------------------------------------")
+	// fmt.Println("Singlepost after comment", singlePost)
+	// fmt.Println("------------------------------------------------------------------")
 
 	return BlogPost{singlePost, len(singlePost.Comments), singlePost.Published.Format(time.ANSIC)}, nil
 }
