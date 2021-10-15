@@ -887,7 +887,7 @@ func checkIfEmailIsRegistered(email string) error {
 
 	//fmt.Println(m.Result, m.Reason)
 
-	// smtp_check is usually false for unregistered/ unreachable emails and score is usually less than 0.5
+	// result is usually "Safe to Send" and Reason is usually "Deliverable" for registered/reachable emails
 	if m.Result != "Safe to Send" || m.Reason != "Deliverable" {
 		return errors.New("Unregistered")
 	}
