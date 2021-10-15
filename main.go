@@ -100,9 +100,9 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	uri := os.Getenv("atlasURI")
-	//shellURI := "mongodb://localhost:27017"
-	clientOptions := options.Client().ApplyURI(uri)
+	//uri := os.Getenv("atlasURI")
+	shellURI := "mongodb://localhost:27017"
+	clientOptions := options.Client().ApplyURI(shellURI)
 
 	ctx = context.Background()
 
@@ -219,7 +219,9 @@ func Next(w http.ResponseWriter, r *http.Request) {
 
 	// if there are no more blogPosts in database
 	if len(blogPosts) == 0 {
-		tpl.ExecuteTemplate(w, "page-end.html", nil)
+		//tpl.ExecuteTemplate(w, "page-end.html", nil)
+		pageNumber--
+		http.Redirect(w, r, "/previous/"+strconv.Itoa(pageNumber), 303)
 		return
 	}
 
