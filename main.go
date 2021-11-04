@@ -712,6 +712,7 @@ func getCommentReplies(commentID string) []Reply {
 	if err != nil {
 		log.Println("Error getting reply cursor", err)
 	}
+	defer cur.Close(ctx)
 
 	if err := cur.All(ctx, &replies); err != nil {
 		log.Println("Error getting reply", err)
@@ -777,6 +778,7 @@ func getNewComment(r *http.Request, id string) (Comment, error) {
 	if err != nil {
 		return Comment{}, errors.New("Something went wrong")
 	}
+	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
 		var c Comment
@@ -812,6 +814,7 @@ func getNewReply(r *http.Request, id string) (Reply, error) {
 	if err != nil {
 		return Reply{}, errors.New("Something went wrong")
 	}
+	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
 		var r Reply
@@ -928,6 +931,7 @@ func getAllSubscribers() ([]string, error) {
 	if err != nil {
 		return []string{}, errors.New("Querying database failed")
 	}
+	defer cursor.Close(ctx)
 
 	var emails []string
 
