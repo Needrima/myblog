@@ -338,7 +338,7 @@ func ReplyToComment(w http.ResponseWriter, r *http.Request) {
 	var comment Comment
 
 	if err := blogComments.FindOne(ctx, bson.M{"id": commentToReplyID}).Decode(&comment); err != nil {
-		log.Println("Reply error", err)
+		log.Println("Reply error: ", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -770,8 +770,8 @@ func getNewComment(r *http.Request, id string) (Comment, error) {
 			return Comment{}, errors.New("something went wrong")
 		}
 
-		if strings.ToLower(strings.TrimSpace(c.Commentor)) == strings.ToLower(strings.TrimSpace(commentor)) && strings.ToLower(strings.TrimSpace(c.Comment)) == strings.ToLower(strings.TrimSpace(comment)) {
-			return Comment{}, errors.New("you already made this reply")
+		if strings.EqualFold(strings.TrimSpace(c.Commentor), strings.TrimSpace(commentor)) && strings.EqualFold(strings.TrimSpace(c.Comment), strings.TrimSpace(comment)) {
+			return Comment{}, errors.New("you already made this comment")
 		}
 	}
 
@@ -807,6 +807,7 @@ func getNewReply(r *http.Request, id string) (Reply, error) {
 		}
 
 		if strings.EqualFold(strings.TrimSpace(r.Replier), strings.TrimSpace(replier)) && strings.EqualFold(strings.TrimSpace(r.Reply), strings.TrimSpace(reply)) {
+			log.Println("Re replying")
 			return Reply{}, errors.New("you already made this reply")
 		}
 
