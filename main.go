@@ -238,7 +238,12 @@ func Next(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tpl.ExecuteTemplate(w, "index.html", data)
+		dataAndSubscriptionSucess := struct {
+			BlogPostAndPageNumber
+			SubscriptionSucess string
+		}{data, "Subscription sucessful"}
+
+		tpl.ExecuteTemplate(w, "index.html", dataAndSubscriptionSucess)
 	}
 }
 
@@ -288,7 +293,12 @@ func Previous(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tpl.ExecuteTemplate(w, "index.html", data)
+		dataAndSubscriptionSucess := struct {
+			BlogPostAndPageNumber
+			SubscriptionSucess string
+		}{data, "Subscription sucessful"}
+
+		tpl.ExecuteTemplate(w, "index.html", dataAndSubscriptionSucess)
 	}
 }
 
@@ -394,7 +404,7 @@ func About(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/about", http.StatusSeeOther)
+		tpl.ExecuteTemplate(w, "about.html", "Sucess")
 	}
 }
 
