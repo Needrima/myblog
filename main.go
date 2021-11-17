@@ -628,6 +628,7 @@ func alreadySubcribed(email string) bool {
 func regiterSubscriber(r *http.Request) error {
 	//valide email
 	Email, exp := template.HTMLEscaper(r.FormValue("semail1")), `^([a-zA-z0-9.!#$%&'*+/=?^_{|}~-]{3,})@([a-zA-Z0-9]{2,})\.([a-zA-Z]{2,})(.[a-zA-Z]+)?$`
+	fmt.Println("Email from subscriber:", Email)
 	if !valid(Email, exp) {
 		return errors.New("invalid email address")
 	}
