@@ -100,9 +100,9 @@ type Subscriber struct {
 
 func main() {
 	// database connection
-	//uri := os.Getenv("atlasURI")
-	shellURI := "mongodb://localhost:27017"
-	clientOptions := options.Client().ApplyURI(shellURI)
+	atlasURI := os.Getenv("atlasURI")
+	//shellURI := "mongodb://localhost:27017"
+	clientOptions := options.Client().ApplyURI(atlasURI)
 
 	ctx = context.Background()
 
@@ -618,10 +618,7 @@ func uploadImageAndReturnName(file multipart.File, ext, ID string) (name string,
 // checks if user is already subscribed
 func alreadySubcribed(email string) bool {
 	singleResult := emails.FindOne(ctx, bson.M{"mail": email})
-	if singleResult.Err() != nil {
-		return false
-	}
-	return true
+	return singleResult.Err() == nil
 }
 
 // register subscriber
