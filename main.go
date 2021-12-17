@@ -47,8 +47,6 @@ var (
 	}
 )
 
-//blog structs
-
 type Reply struct {
 	DatabaseID primitive.ObjectID `bson:"_id"`
 	BelongsTo  string             `bson:"belongsto"` // ID of owning comment
@@ -98,6 +96,10 @@ type Subscriber struct {
 	Mail       string             `bson:"mail"`
 }
 
+func init() {
+	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.html"))
+}
+
 func main() {
 	// database connection
 	atlasURI := os.Getenv("atlasURI")
@@ -136,7 +138,6 @@ func main() {
 
 // http handler functions
 
-//redirects to home
 func Visit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
@@ -168,9 +169,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 		tpl.ExecuteTemplate(w, "index.html", data)
-	} else if r.Method == http.MethodPost { // user trying to subbscibe
+	} else if r.Method == http.MethodPost {
 		if err := regiterSubscriber(r); err != nil {
-			if err.Error() == "unregistered" { // unregistered/unreachable email address
+			if err.Error() == "unregistered" {
 				http.Error(w, "Email not deliverable. Check that email is correct or try again later", http.StatusBadRequest)
 				return
 			}
@@ -188,7 +189,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// calls next eight blogposts
 func Next(w http.ResponseWriter, r *http.Request) {
 	if !ValidMethod(r) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -196,7 +196,6 @@ func Next(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageNumber, _ := strconv.Atoi(r.URL.Path[len("/next/"):])
-	//pageNumber++
 
 	// gets next eight blogposts
 	limit, skip := int64(8), int64(8*pageNumber)
@@ -310,6 +309,11 @@ func Blog(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet { // render blogPosts
 		post, err := getSinglePostFromID(id)
 		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				tpl.ExecuteTemplate(w, "page-end.html", nil)
+				return
+			}
+
 			http.Error(w, "Something went wrong: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -443,11 +447,6 @@ func ServeFavicon(w http.ResponseWriter, r *http.Request) {
 }
 
 //helping functions
-
-// initializes templates parsing
-func init() {
-	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.html"))
-}
 
 func routes() {
 	//handlers
