@@ -103,7 +103,7 @@ func init() {
 func main() {
 	// database connection
 	atlasURI := os.Getenv("atlasURI")
-	//shellURI := "mongodb://localhost:27017"
+	// shellURI := "mongodb://localhost:27017"
 	clientOptions := options.Client().ApplyURI(atlasURI)
 
 	ctx = context.Background()
