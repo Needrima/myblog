@@ -499,7 +499,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 		return NewPost{}, errors.New("invalid character in content")
 	}
 
-	bp_heading, exp := r.FormValue("bullet-point-Heading"), `^[\sa-zA-Z0-9\.,\?/\\]+$`
+	bp_heading, exp := r.FormValue("bullet-point-Heading"), `^[\sa-zA-Z0-9\.,\?/\\]{0,}$`
 	if !valid(bp_heading, exp) {
 		return NewPost{}, errors.New("invalid character in bullet point heading")
 	}
@@ -510,7 +510,7 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	}
 	bullet_points := strings.Split(bullet_point_content, "/")
 
-	bq_heading, exp := r.FormValue("blog-quote-Heading"), `^[\sa-zA-Z0-9\.,\?/\\]+$`
+	bq_heading, exp := r.FormValue("blog-quote-Heading"), `^[\sa-zA-Z0-9\.,\?/\\]{0,}$`
 	if !valid(bq_heading, exp) {
 		return NewPost{}, errors.New("invalid character in blog quote heading")
 	}
@@ -557,20 +557,12 @@ func getNewPost(r *http.Request) (post NewPost, err error) {
 	subscribers, err := getAllSubscribers()
 
 	if err != nil { // delete image file and return error message
-		files, _ := ioutil.ReadDir("./assets/images/blog")
-		for _, v := range files {
-			if strings.Contains(v.Name(), ID) {
-				os.Remove("./assets/images/blog/" + ID)
-				break
-			}
-		}
-
-		return NewPost{}, err
+		fmt.Println(err)
 	}
 
 	// send mail to subscibers
 	if err := sendMailOnNewBlogPost(subscribers, ID, title); err != nil {
-		return NewPost{}, err
+		fmt.Println(err)
 	}
 
 	// return new post data

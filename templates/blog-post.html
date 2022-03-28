@@ -81,23 +81,28 @@
 					</figure>
 				    <p>{{.Content}}</p>
 				    
+					{{if .BpTitle}}
 				    <h5 class="my-3">{{.BpTitle}}:</h5>
 				    <ul class="mb-5">
 					  {{range .BulletPoints}}
 					  <li class="mb-2">{{.}}.</li>
 					  {{end}}
 					</ul>
+
 					<h5 class="my-3">{{.BqTitle}}:</h5>
 					<blockquote class="blockquote m-lg-5 py-3 pl-4 px-lg-5">
 						<p class="mb-2">{{.BlogQuote}}.</p>
 						<footer class="blockquote-footer">{{.QuoteAuthor}}</footer>
 					</blockquote>
+					{{end}}
 
+					{{if .VideoPath}}
 					<!--Video section-->
 				    <h3 class="mt-5 mb-3">Video Example</h3>
 				    <div class="embed-responsive embed-responsive-16by9">
 					   <iframe width="560" height="315" src="https://www.youtube.com/embed/{{.VideoPath}}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>										
 					</div><br>
+					{{end}}
 				
 					<!--comment section-->
 					<a id="comment-toggler" href="#comment-section" style="color: darkgreen; font-size: 2em;">Show comments</a>
@@ -126,6 +131,7 @@
 			    </div>				
 		    </div><!--//container-->
 	    </article>
+		
 	    <!--//promo-section-->
 	    <section class="promo-section theme-bg-light py-5 text-center">
 		    <div class="container">
